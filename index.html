@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestión Bibliotecaria - BiblioTech DB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-md border-b-2 border-indigo-600">
+      <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center">
+            <div class="bg-indigo-600 text-white p-2 rounded mr-3">
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900">
+                Sistema Bibliotecario BiblioTech
+              </h1>
+              <p class="text-sm text-gray-600">
+                Base de Datos: library_db | Servidor: LIB-PROD-001 | Versión:
+                3.2.1
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="text-right">
+              <p class="text-sm text-gray-600">Última sincronización</p>
+              <p class="text-sm font-medium" id="lastSync">
+                2024-01-15 15:45:22
+              </p>
+            </div>
+            <button
+              onclick="syncDatabase()"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium"
+            >
+              Sincronizar DB
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+          <button
+            onclick="showTab('catalog')"
+            id="tab-catalog"
+            class="tab-button active border-indigo-500 text-indigo-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+          >
+            Catálogo de Libros
+          </button>
+          <button
+            onclick="showTab('loans')"
+            id="tab-loans"
+            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+          >
+            Préstamos
+          </button>
+          <button
+            onclick="showTab('users')"
+            id="tab-users"
+            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+          >
+            Usuarios
+          </button>
+          <button
+            onclick="showTab('reports')"
+            id="tab-reports"
+            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+          >
+            Reportes
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <!-- Database Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase">
+                Total Libros
+              </p>
+              <p class="text-2xl font-bold text-gray-900" id="totalBooks">
+                12,847
+              </p>
+              <p class="text-xs text-gray-500 mt-1">Tabla: books</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded">
+              <svg
+                class="w-6 h-6 text-blue-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase">
+                Disponibles
+              </p>
+              <p class="text-2xl font-bold text-gray-900" id="availableBooks">
+                9,234
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                WHERE status = 'available'
+              </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded">
+              <svg
+                class="w-6 h-6 text-green-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase">
+                Prestados
+              </p>
+              <p class="text-2xl font-bold text-gray-900" id="loanedBooks">
+                3,456
+              </p>
+              <p class="text-xs text-gray-500 mt-1">WHERE status = 'loaned'</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded">
+              <svg
+                class="w-6 h-6 text-yellow-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase">
+                Vencidos
+              </p>
+              <p class="text-2xl font-bold text-gray-900" id="overdueBooks">
+                89
+              </p>
+              <p class="text-xs text-gray-500 mt-1">WHERE due_date < NOW()</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded">
+              <svg
+                class="w-6 h-6 text-red-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase">
+                Usuarios Activos
+              </p>
+              <p class="text-2xl font-bold text-gray-900" id="activeUsers">
+                2,156
+              </p>
+              <p class="text-xs text-gray-500 mt-1">Tabla: users</p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded">
+              <svg
+                class="w-6 h-6 text-purple-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catalog Tab -->
+      <div id="catalog-tab" class="tab-content">
+        <!-- Search and Filters -->
+        <div class="bg-white rounded-lg shadow mb-6">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Catálogo de Libros - Consultas Avanzadas
+            </h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Buscar</label
+                >
+                <input
+                  type="text"
+                  id="bookSearch"
+                  onkeyup="filterBooks()"
+                  placeholder="Título, autor, ISBN..."
+                  class="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Categoría</label
+                >
+                <select
+                  id="categoryFilter"
+                  onchange="filterBooks()"
+                  class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">Todas</option>
+                  <option value="ficcion">Ficción</option>
+                  <option value="no-ficcion">No Ficción</option>
+                  <option value="ciencia">Ciencia</option>
+                  <option value="historia">Historia</option>
+                  <option value="biografia">Biografía</option>
+                  <option value="tecnologia">Tecnología</option>
+                  <option value="arte">Arte</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Estado</label
+                >
+                <select
+                  id="statusFilter"
+                  onchange="filterBooks()"
+                  class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">Todos</option>
+                  <option value="available">Disponible</option>
+                  <option value="loaned">Prestado</option>
+                  <option value="reserved">Reservado</option>
+                  <option value="maintenance">Mantenimiento</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Año</label
+                >
+                <select
+                  id="yearFilter"
+                  onchange="filterBooks()"
+                  class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">Todos</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                  <option value="2022">2022</option>
+                  <option value="2021">2021</option>
+                  <option value="2020">2020</option>
+                  <option value="older">Anteriores</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Ubicación</label
+                >
+                <select
+                  id="locationFilter"
+                  onchange="filterBooks()"
+                  class="w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">Todas</option>
+                  <option value="A">Sección A</option>
+                  <option value="B">Sección B</option>
+                  <option value="C">Sección C</option>
+                  <option value="D">Sección D</option>
+                  <option value="REF">Referencia</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex space-x-2">
+                <button
+                  onclick="addBook()"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  + Agregar Libro
+                </button>
+                <button
+                  onclick="exportCatalog()"
+                  class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  Exportar Catálogo
+                </button>
+                <button
+                  onclick="bulkImport()"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  Importación Masiva
+                </button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-600">Registros por página:</span>
+                <select
+                  id="booksPerPage"
+                  onchange="changeBooksPageSize()"
+                  class="border border-gray-300 rounded px-2 py-1 text-sm"
+                >
+                  <option value="25">25</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Books Table -->
+        <div class="bg-white rounded-lg shadow">
+          <div
+            class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+          >
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">
+                Catálogo de Libros
+              </h3>
+              <p class="text-sm text-gray-600">
+                Mostrando <span id="showingBooksCount">1-50</span> de
+                <span id="totalBooksCount">12,847</span> registros
+              </p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onclick="sortBooks('isbn')"
+                  >
+                    ISBN <span id="sort-isbn">↕</span>
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onclick="sortBooks('title')"
+                  >
+                    Título <span id="sort-title">↕</span>
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onclick="sortBooks('author')"
+                  >
+                    Autor <span id="sort-author">↕</span>
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Categoría
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Año
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Ubicación
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Estado
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="booksTableBody"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Books populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            class="px-6 py-4 border-t border-gray-200 flex items-center justify-between"
+          >
+            <div class="flex items-center space-x-2">
+              <button
+                onclick="previousBooksPage()"
+                id="prevBooksBtn"
+                class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
+              >
+                Anterior
+              </button>
+              <div id="booksPageNumbers" class="flex space-x-1">
+                <!-- Page numbers populated by JavaScript -->
+              </div>
+              <button
+                onclick="nextBooksPage()"
+                id="nextBooksBtn"
+                class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
+              >
+                Siguiente
+              </button>
+            </div>
+            <div class="text-sm text-gray-600">
+              Página <span id="currentBooksPageDisplay">1</span> de
+              <span id="totalBooksPageDisplay">257</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loans Tab -->
+      <div id="loans-tab" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- New Loan -->
+          <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Nuevo Préstamo
+              </h3>
+            </div>
+            <div class="p-6">
+              <form id="loanForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >ID Usuario</label
+                  >
+                  <input
+                    type="text"
+                    id="loanUserId"
+                    placeholder="Escanear carnet o ingresar ID"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >ISBN del Libro</label
+                  >
+                  <input
+                    type="text"
+                    id="loanBookIsbn"
+                    placeholder="Escanear código de barras"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Días de Préstamo</label
+                  >
+                  <select
+                    id="loanDays"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                  >
+                    <option value="7">7 días (Estándar)</option>
+                    <option value="14">14 días (Extendido)</option>
+                    <option value="21">21 días (Investigación)</option>
+                    <option value="30">30 días (Académico)</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onclick="processLoan()"
+                  class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded"
+                >
+                  Procesar Préstamo
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Return Book -->
+          <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Devolución de Libro
+              </h3>
+            </div>
+            <div class="p-6">
+              <form id="returnForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >ISBN del Libro</label
+                  >
+                  <input
+                    type="text"
+                    id="returnBookIsbn"
+                    placeholder="Escanear código de barras"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Estado del Libro</label
+                  >
+                  <select
+                    id="bookCondition"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                  >
+                    <option value="good">Buen Estado</option>
+                    <option value="fair">Estado Regular</option>
+                    <option value="damaged">Dañado</option>
+                    <option value="lost">Perdido</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Notas (Opcional)</label
+                  >
+                  <textarea
+                    id="returnNotes"
+                    rows="2"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                  ></textarea>
+                </div>
+                <button
+                  type="button"
+                  onclick="processReturn()"
+                  class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                >
+                  Procesar Devolución
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Loans Table -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Préstamos Activos
+            </h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    ID Préstamo
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Usuario
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Libro
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Fecha Préstamo
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Fecha Vencimiento
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Estado
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="loansTableBody"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Loans populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="users-tab" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow">
+          <div
+            class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+          >
+            <h3 class="text-lg font-semibold text-gray-900">
+              Gestión de Usuarios
+            </h3>
+            <button
+              onclick="addUser()"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+            >
+              + Nuevo Usuario
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    ID Usuario
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Nombre
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Email
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Tipo
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Préstamos Activos
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Multas
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Estado
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="usersTableBody"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Users populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports Tab -->
+      <div id="reports-tab" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              Reportes Disponibles
+            </h3>
+            <div class="space-y-3">
+              <button
+                onclick="generateReport('circulation')"
+                class="w-full text-left p-3 border border-gray-200 rounded hover:bg-gray-50"
+              >
+                <div class="font-medium">Reporte de Circulación</div>
+                <div class="text-sm text-gray-600">
+                  Préstamos y devoluciones por período
+                </div>
+              </button>
+              <button
+                onclick="generateReport('overdue')"
+                class="w-full text-left p-3 border border-gray-200 rounded hover:bg-gray-50"
+              >
+                <div class="font-medium">Libros Vencidos</div>
+                <div class="text-sm text-gray-600">
+                  Lista de préstamos vencidos y multas
+                </div>
+              </button>
+              <button
+                onclick="generateReport('popular')"
+                class="w-full text-left p-3 border border-gray-200 rounded hover:bg-gray-50"
+              >
+                <div class="font-medium">Libros Más Populares</div>
+                <div class="text-sm text-gray-600">
+                  Ranking de libros más prestados
+                </div>
+              </button>
+              <button
+                onclick="generateReport('inventory')"
+                class="w-full text-left p-3 border border-gray-200 rounded hover:bg-gray-50"
+              >
+                <div class="font-medium">Inventario Completo</div>
+                <div class="text-sm text-gray-600">
+                  Estado actual del catálogo
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              Estadísticas Rápidas
+            </h3>
+            <div class="space-y-4">
+              <div
+                class="flex justify-between items-center p-3 bg-gray-50 rounded"
+              >
+                <span class="text-sm font-medium">Préstamos Hoy</span>
+                <span class="text-lg font-bold text-indigo-600">47</span>
+              </div>
+              <div
+                class="flex justify-between items-center p-3 bg-gray-50 rounded"
+              >
+                <span class="text-sm font-medium">Devoluciones Hoy</span>
+                <span class="text-lg font-bold text-green-600">52</span>
+              </div>
+              <div
+                class="flex justify-between items-center p-3 bg-gray-50 rounded"
+              >
+                <span class="text-sm font-medium">Nuevos Usuarios</span>
+                <span class="text-lg font-bold text-blue-600">8</span>
+              </div>
+              <div
+                class="flex justify-between items-center p-3 bg-gray-50 rounded"
+              >
+                <span class="text-sm font-medium">Multas Cobradas</span>
+                <span class="text-lg font-bold text-red-600">$234.50</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Modal -->
+    <div
+      id="bookModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900" id="bookModalTitle">
+            Agregar Nuevo Libro
+          </h3>
+        </div>
+        <div class="p-6">
+          <form id="bookForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >ISBN *</label
+              >
+              <input
+                type="text"
+                id="bookIsbn"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Título *</label
+              >
+              <input
+                type="text"
+                id="bookTitle"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Autor *</label
+              >
+              <input
+                type="text"
+                id="bookAuthor"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Categoría *</label
+              >
+              <select
+                id="bookCategory"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+                required
+              >
+                <option value="">Seleccionar</option>
+                <option value="ficcion">Ficción</option>
+                <option value="no-ficcion">No Ficción</option>
+                <option value="ciencia">Ciencia</option>
+                <option value="historia">Historia</option>
+                <option value="biografia">Biografía</option>
+                <option value="tecnologia">Tecnología</option>
+                <option value="arte">Arte</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Año de Publicación</label
+              >
+              <input
+                type="number"
+                id="bookYear"
+                min="1000"
+                max="2024"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Editorial</label
+              >
+              <input
+                type="text"
+                id="bookPublisher"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Ubicación</label
+              >
+              <select
+                id="bookLocation"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="A">Sección A</option>
+                <option value="B">Sección B</option>
+                <option value="C">Sección C</option>
+                <option value="D">Sección D</option>
+                <option value="REF">Referencia</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Número de Páginas</label
+              >
+              <input
+                type="number"
+                id="bookPages"
+                min="1"
+                class="w-full border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+          </form>
+        </div>
+        <div
+          class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3"
+        >
+          <button
+            onclick="hideBookModal()"
+            class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+          >
+            Cancelar
+          </button>
+          <button
+            onclick="saveBook()"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Sample data
+      let books = [
+        {
+          id: 1,
+          isbn: "978-0-7432-7356-5",
+          title: "El Código Da Vinci",
+          author: "Dan Brown",
+          category: "ficcion",
+          year: 2003,
+          publisher: "Doubleday",
+          location: "A",
+          pages: 454,
+          status: "available",
+          addedDate: "2024-01-10",
+        },
+        {
+          id: 2,
+          isbn: "978-0-553-29698-2",
+          title: "Breve Historia del Tiempo",
+          author: "Stephen Hawking",
+          category: "ciencia",
+          year: 1988,
+          publisher: "Bantam",
+          location: "B",
+          pages: 256,
+          status: "loaned",
+          addedDate: "2024-01-08",
+        },
+        {
+          id: 3,
+          isbn: "978-0-06-112008-4",
+          title: "Cien Años de Soledad",
+          author: "Gabriel García Márquez",
+          category: "ficcion",
+          year: 1967,
+          publisher: "Harper & Row",
+          location: "A",
+          pages: 417,
+          status: "available",
+          addedDate: "2024-01-05",
+        },
+        {
+          id: 4,
+          isbn: "978-0-385-50420-4",
+          title: "1984",
+          author: "George Orwell",
+          category: "ficcion",
+          year: 1949,
+          publisher: "Secker & Warburg",
+          location: "A",
+          pages: 328,
+          status: "reserved",
+          addedDate: "2024-01-12",
+        },
+        {
+          id: 5,
+          isbn: "978-0-7432-4722-1",
+          title: "Steve Jobs",
+          author: "Walter Isaacson",
+          category: "biografia",
+          year: 2011,
+          publisher: "Simon & Schuster",
+          location: "C",
+          pages: 656,
+          status: "available",
+          addedDate: "2024-01-15",
+        },
+        {
+          id: 6,
+          isbn: "978-0-345-39180-3",
+          title: "Sapiens",
+          author: "Yuval Noah Harari",
+          category: "historia",
+          year: 2011,
+          publisher: "Harvill Secker",
+          location: "B",
+          pages: 443,
+          status: "loaned",
+          addedDate: "2024-01-03",
+        },
+        {
+          id: 7,
+          isbn: "978-0-262-03384-8",
+          title: "Introducción a los Algoritmos",
+          author: "Thomas H. Cormen",
+          category: "tecnologia",
+          year: 2009,
+          publisher: "MIT Press",
+          location: "D",
+          pages: 1292,
+          status: "available",
+          addedDate: "2024-01-07",
+        },
+        {
+          id: 8,
+          isbn: "978-0-06-251770-0",
+          title: "El Arte de la Guerra",
+          author: "Sun Tzu",
+          category: "historia",
+          year: 2000,
+          publisher: "HarperCollins",
+          location: "REF",
+          pages: 273,
+          status: "available",
+          addedDate: "2024-01-09",
+        },
+      ];
+
+      let loans = [
+        {
+          id: 1,
+          userId: "U001",
+          userName: "María González",
+          bookId: 2,
+          bookTitle: "Breve Historia del Tiempo",
+          loanDate: "2024-01-10",
+          dueDate: "2024-01-24",
+          status: "active",
+        },
+        {
+          id: 2,
+          userId: "U002",
+          userName: "Carlos Rodríguez",
+          bookId: 6,
+          bookTitle: "Sapiens",
+          loanDate: "2024-01-08",
+          dueDate: "2024-01-22",
+          status: "overdue",
+        },
+        {
+          id: 3,
+          userId: "U003",
+          userName: "Ana Martínez",
+          bookId: 4,
+          bookTitle: "1984",
+          loanDate: "2024-01-12",
+          dueDate: "2024-01-26",
+          status: "active",
+        },
+      ];
+
+      let users = [
+        {
+          id: "U001",
+          name: "María González",
+          email: "maria.gonzalez@email.com",
+          type: "estudiante",
+          activeLoans: 1,
+          fines: 0,
+          status: "active",
+        },
+        {
+          id: "U002",
+          name: "Carlos Rodríguez",
+          email: "carlos.rodriguez@email.com",
+          type: "profesor",
+          activeLoans: 1,
+          fines: 15.5,
+          status: "active",
+        },
+        {
+          id: "U003",
+          name: "Ana Martínez",
+          email: "ana.martinez@email.com",
+          type: "estudiante",
+          activeLoans: 1,
+          fines: 0,
+          status: "active",
+        },
+        {
+          id: "U004",
+          name: "Luis Pérez",
+          email: "luis.perez@email.com",
+          type: "externo",
+          activeLoans: 0,
+          fines: 0,
+          status: "suspended",
+        },
+      ];
+
+      let filteredBooks = [...books];
+      let currentBooksPage = 1;
+      let booksPerPage = 50;
+      let booksSortField = "";
+      let booksSortDirection = "asc";
+      let nextBookId = 9;
+      let nextLoanId = 4;
+      let editingBookId = null;
+
+      // Initialize
+      function init() {
+        updateStats();
+        renderBooksTable();
+        updateBooksPagination();
+        renderLoansTable();
+        renderUsersTable();
+        updateSyncTime();
+      }
+
+      // Tab management
+      function showTab(tabName) {
+        // Hide all tabs
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((tab) => tab.classList.add("hidden"));
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove(
+            "active",
+            "border-indigo-500",
+            "text-indigo-600"
+          );
+          btn.classList.add("border-transparent", "text-gray-500");
+        });
+
+        // Show selected tab
+        document.getElementById(tabName + "-tab").classList.remove("hidden");
+        const activeBtn = document.getElementById("tab-" + tabName);
+        activeBtn.classList.add(
+          "active",
+          "border-indigo-500",
+          "text-indigo-600"
+        );
+        activeBtn.classList.remove("border-transparent", "text-gray-500");
+      }
+
+      // Update statistics
+      function updateStats() {
+        const totalBooks = books.length;
+        const availableBooks = books.filter(
+          (b) => b.status === "available"
+        ).length;
+        const loanedBooks = books.filter((b) => b.status === "loaned").length;
+        const overdueLoans = loans.filter((l) => l.status === "overdue").length;
+        const activeUsers = users.filter((u) => u.status === "active").length;
+
+        document.getElementById("totalBooks").textContent =
+          totalBooks.toLocaleString();
+        document.getElementById("availableBooks").textContent =
+          availableBooks.toLocaleString();
+        document.getElementById("loanedBooks").textContent =
+          loanedBooks.toLocaleString();
+        document.getElementById("overdueBooks").textContent = overdueLoans;
+        document.getElementById("activeUsers").textContent =
+          activeUsers.toLocaleString();
+      }
+
+      // Books management
+      function filterBooks() {
+        const search = document
+          .getElementById("bookSearch")
+          .value.toLowerCase();
+        const category = document.getElementById("categoryFilter").value;
+        const status = document.getElementById("statusFilter").value;
+        const year = document.getElementById("yearFilter").value;
+        const location = document.getElementById("locationFilter").value;
+
+        filteredBooks = books.filter((book) => {
+          const matchesSearch =
+            !search ||
+            book.title.toLowerCase().includes(search) ||
+            book.author.toLowerCase().includes(search) ||
+            book.isbn.toLowerCase().includes(search);
+          const matchesCategory = !category || book.category === category;
+          const matchesStatus = !status || book.status === status;
+          const matchesYear =
+            !year ||
+            (year === "older"
+              ? book.year < 2020
+              : book.year.toString() === year);
+          const matchesLocation = !location || book.location === location;
+
+          return (
+            matchesSearch &&
+            matchesCategory &&
+            matchesStatus &&
+            matchesYear &&
+            matchesLocation
+          );
+        });
+
+        currentBooksPage = 1;
+        renderBooksTable();
+        updateBooksPagination();
+      }
+
+      function sortBooks(field) {
+        if (booksSortField === field) {
+          booksSortDirection = booksSortDirection === "asc" ? "desc" : "asc";
+        } else {
+          booksSortField = field;
+          booksSortDirection = "asc";
+        }
+
+        document
+          .querySelectorAll('[id^="sort-"]')
+          .forEach((el) => (el.textContent = "↕"));
+        document.getElementById(`sort-${field}`).textContent =
+          booksSortDirection === "asc" ? "↑" : "↓";
+
+        filteredBooks.sort((a, b) => {
+          let aVal = a[field];
+          let bVal = b[field];
+
+          if (typeof aVal === "string") {
+            aVal = aVal.toLowerCase();
+            bVal = bVal.toLowerCase();
+          }
+
+          if (booksSortDirection === "asc") {
+            return aVal > bVal ? 1 : -1;
+          } else {
+            return aVal < bVal ? 1 : -1;
+          }
+        });
+
+        renderBooksTable();
+      }
+
+      function renderBooksTable() {
+        const tbody = document.getElementById("booksTableBody");
+        const start = (currentBooksPage - 1) * booksPerPage;
+        const end = start + booksPerPage;
+        const pageBooks = filteredBooks.slice(start, end);
+
+        tbody.innerHTML = pageBooks
+          .map(
+            (book) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">${
+                      book.isbn
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${
+                          book.title
+                        }</div>
+                        <div class="text-sm text-gray-500">${book.publisher} (${
+              book.pages
+            } págs.)</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      book.author
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            ${book.category}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      book.year
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      book.location
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBookStatusColor(
+                          book.status
+                        )}">
+                            ${getBookStatusText(book.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editBook(${
+                          book.id
+                        })" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
+                        <button onclick="reserveBook(${
+                          book.id
+                        })" class="text-green-600 hover:text-green-900 mr-3">Reservar</button>
+                        <button onclick="deleteBook(${
+                          book.id
+                        })" class="text-red-600 hover:text-red-900">Eliminar</button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+
+        const showing = `${start + 1}-${Math.min(end, filteredBooks.length)}`;
+        document.getElementById("showingBooksCount").textContent = showing;
+        document.getElementById("totalBooksCount").textContent =
+          filteredBooks.length.toLocaleString();
+      }
+
+      function getBookStatusColor(status) {
+        switch (status) {
+          case "available":
+            return "bg-green-100 text-green-800";
+          case "loaned":
+            return "bg-yellow-100 text-yellow-800";
+          case "reserved":
+            return "bg-blue-100 text-blue-800";
+          case "maintenance":
+            return "bg-red-100 text-red-800";
+          default:
+            return "bg-gray-100 text-gray-800";
+        }
+      }
+
+      function getBookStatusText(status) {
+        switch (status) {
+          case "available":
+            return "Disponible";
+          case "loaned":
+            return "Prestado";
+          case "reserved":
+            return "Reservado";
+          case "maintenance":
+            return "Mantenimiento";
+          default:
+            return "Desconocido";
+        }
+      }
+
+      // Books pagination
+      function updateBooksPagination() {
+        const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+        document.getElementById("currentBooksPageDisplay").textContent =
+          currentBooksPage;
+        document.getElementById("totalBooksPageDisplay").textContent =
+          totalPages;
+
+        document.getElementById("prevBooksBtn").disabled =
+          currentBooksPage === 1;
+        document.getElementById("nextBooksBtn").disabled =
+          currentBooksPage === totalPages;
+
+        const pageNumbers = document.getElementById("booksPageNumbers");
+        pageNumbers.innerHTML = "";
+
+        const startPage = Math.max(1, currentBooksPage - 2);
+        const endPage = Math.min(totalPages, currentBooksPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+          const button = document.createElement("button");
+          button.textContent = i;
+          button.className = `px-3 py-1 border rounded text-sm ${
+            i === currentBooksPage
+              ? "bg-indigo-600 text-white border-indigo-600"
+              : "border-gray-300 hover:bg-gray-50"
+          }`;
+          button.onclick = () => goToBooksPage(i);
+          pageNumbers.appendChild(button);
+        }
+      }
+
+      function previousBooksPage() {
+        if (currentBooksPage > 1) {
+          currentBooksPage--;
+          renderBooksTable();
+          updateBooksPagination();
+        }
+      }
+
+      function nextBooksPage() {
+        const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+        if (currentBooksPage < totalPages) {
+          currentBooksPage++;
+          renderBooksTable();
+          updateBooksPagination();
+        }
+      }
+
+      function goToBooksPage(page) {
+        currentBooksPage = page;
+        renderBooksTable();
+        updateBooksPagination();
+      }
+
+      function changeBooksPageSize() {
+        booksPerPage = parseInt(document.getElementById("booksPerPage").value);
+        currentBooksPage = 1;
+        renderBooksTable();
+        updateBooksPagination();
+      }
+
+      // Book modal management
+      function addBook() {
+        editingBookId = null;
+        document.getElementById("bookModalTitle").textContent =
+          "Agregar Nuevo Libro";
+        document.getElementById("bookForm").reset();
+        document.getElementById("bookModal").classList.remove("hidden");
+        document.getElementById("bookModal").classList.add("flex");
+      }
+
+      function editBook(id) {
+        editingBookId = id;
+        const book = books.find((b) => b.id === id);
+
+        document.getElementById("bookModalTitle").textContent = "Editar Libro";
+        document.getElementById("bookIsbn").value = book.isbn;
+        document.getElementById("bookTitle").value = book.title;
+        document.getElementById("bookAuthor").value = book.author;
+        document.getElementById("bookCategory").value = book.category;
+        document.getElementById("bookYear").value = book.year;
+        document.getElementById("bookPublisher").value = book.publisher;
+        document.getElementById("bookLocation").value = book.location;
+        document.getElementById("bookPages").value = book.pages;
+
+        document.getElementById("bookModal").classList.remove("hidden");
+        document.getElementById("bookModal").classList.add("flex");
+      }
+
+      function hideBookModal() {
+        document.getElementById("bookModal").classList.add("hidden");
+        document.getElementById("bookModal").classList.remove("flex");
+      }
+
+      function saveBook() {
+        const formData = {
+          isbn: document.getElementById("bookIsbn").value,
+          title: document.getElementById("bookTitle").value,
+          author: document.getElementById("bookAuthor").value,
+          category: document.getElementById("bookCategory").value,
+          year: parseInt(document.getElementById("bookYear").value),
+          publisher: document.getElementById("bookPublisher").value,
+          location: document.getElementById("bookLocation").value,
+          pages: parseInt(document.getElementById("bookPages").value),
+          addedDate: new Date().toISOString().slice(0, 10),
+        };
+
+        if (
+          !formData.isbn ||
+          !formData.title ||
+          !formData.author ||
+          !formData.category
+        ) {
+          alert("Por favor completa todos los campos obligatorios.");
+          return;
+        }
+
+        if (editingBookId) {
+          const index = books.findIndex((b) => b.id === editingBookId);
+          books[index] = { ...books[index], ...formData };
+        } else {
+          formData.id = nextBookId++;
+          formData.status = "available";
+          books.push(formData);
+        }
+
+        hideBookModal();
+        filterBooks();
+        updateStats();
+        updateSyncTime();
+      }
+
+      function reserveBook(id) {
+        const book = books.find((b) => b.id === id);
+        if (book.status === "available") {
+          book.status = "reserved";
+          alert(`Libro "${book.title}" reservado exitosamente.`);
+          filterBooks();
+          updateStats();
+        } else {
+          alert("Este libro no está disponible para reserva.");
+        }
+      }
+
+      function deleteBook(id) {
+        if (
+          confirm(
+            "¿Estás seguro de que quieres eliminar este libro del catálogo?"
+          )
+        ) {
+          books = books.filter((b) => b.id !== id);
+          filterBooks();
+          updateStats();
+          updateSyncTime();
+        }
+      }
+
+      // Loans management
+      function processLoan() {
+        const userId = document.getElementById("loanUserId").value;
+        const isbn = document.getElementById("loanBookIsbn").value;
+        const days = parseInt(document.getElementById("loanDays").value);
+
+        if (!userId || !isbn) {
+          alert("Por favor completa todos los campos.");
+          return;
+        }
+
+        const book = books.find((b) => b.isbn === isbn);
+        const user = users.find((u) => u.id === userId);
+
+        if (!book) {
+          alert("Libro no encontrado. Verifica el ISBN.");
+          return;
+        }
+
+        if (!user) {
+          alert("Usuario no encontrado. Verifica el ID.");
+          return;
+        }
+
+        if (book.status !== "available") {
+          alert("Este libro no está disponible para préstamo.");
+          return;
+        }
+
+        if (user.status === "suspended") {
+          alert("Este usuario está suspendido y no puede realizar préstamos.");
+          return;
+        }
+
+        // Process loan
+        const loanDate = new Date();
+        const dueDate = new Date(
+          loanDate.getTime() + days * 24 * 60 * 60 * 1000
+        );
+
+        const newLoan = {
+          id: nextLoanId++,
+          userId: userId,
+          userName: user.name,
+          bookId: book.id,
+          bookTitle: book.title,
+          loanDate: loanDate.toISOString().slice(0, 10),
+          dueDate: dueDate.toISOString().slice(0, 10),
+          status: "active",
+        };
+
+        loans.push(newLoan);
+        book.status = "loaned";
+        user.activeLoans++;
+
+        document.getElementById("loanForm").reset();
+        alert(
+          `Préstamo procesado exitosamente.\nLibro: ${book.title}\nUsuario: ${
+            user.name
+          }\nFecha de devolución: ${dueDate.toLocaleDateString()}`
+        );
+
+        renderLoansTable();
+        filterBooks();
+        updateStats();
+        updateSyncTime();
+      }
+
+      function processReturn() {
+        const isbn = document.getElementById("returnBookIsbn").value;
+        const condition = document.getElementById("bookCondition").value;
+        const notes = document.getElementById("returnNotes").value;
+
+        if (!isbn) {
+          alert("Por favor ingresa el ISBN del libro.");
+          return;
+        }
+
+        const book = books.find((b) => b.isbn === isbn);
+        if (!book) {
+          alert("Libro no encontrado. Verifica el ISBN.");
+          return;
+        }
+
+        const loan = loans.find(
+          (l) => l.bookId === book.id && l.status === "active"
+        );
+        if (!loan) {
+          alert("No se encontró un préstamo activo para este libro.");
+          return;
+        }
+
+        const user = users.find((u) => u.id === loan.userId);
+
+        // Process return
+        loan.status = "returned";
+        loan.returnDate = new Date().toISOString().slice(0, 10);
+        loan.condition = condition;
+        loan.notes = notes;
+
+        if (condition === "good" || condition === "fair") {
+          book.status = "available";
+        } else {
+          book.status = "maintenance";
+        }
+
+        user.activeLoans--;
+
+        // Calculate fine if overdue
+        const today = new Date();
+        const dueDate = new Date(loan.dueDate);
+        if (today > dueDate) {
+          const daysLate = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+          const fine = daysLate * 2.5; // $2.50 per day
+          user.fines += fine;
+          alert(
+            `Devolución procesada.\nLibro devuelto con ${daysLate} días de retraso.\nMulta aplicada: $${fine.toFixed(
+              2
+            )}`
+          );
+        } else {
+          alert("Devolución procesada exitosamente.");
+        }
+
+        document.getElementById("returnForm").reset();
+        renderLoansTable();
+        renderUsersTable();
+        filterBooks();
+        updateStats();
+        updateSyncTime();
+      }
+
+      function renderLoansTable() {
+        const tbody = document.getElementById("loansTableBody");
+        const activeLoans = loans.filter((l) => l.status === "active");
+
+        tbody.innerHTML = activeLoans
+          .map((loan) => {
+            const isOverdue = new Date() > new Date(loan.dueDate);
+            const statusClass = isOverdue
+              ? "bg-red-100 text-red-800"
+              : "bg-green-100 text-green-800";
+            const statusText = isOverdue ? "Vencido" : "Activo";
+
+            return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">${
+                          loan.id
+                        }</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${
+                              loan.userName
+                            }</div>
+                            <div class="text-sm text-gray-500">${
+                              loan.userId
+                            }</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                          loan.bookTitle
+                        }</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${new Date(
+                          loan.loanDate
+                        ).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${new Date(
+                          loan.dueDate
+                        ).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="renewLoan(${
+                              loan.id
+                            })" class="text-blue-600 hover:text-blue-900 mr-3">Renovar</button>
+                            <button onclick="sendReminder(${
+                              loan.id
+                            })" class="text-yellow-600 hover:text-yellow-900">Recordatorio</button>
+                        </td>
+                    </tr>
+                `;
+          })
+          .join("");
+      }
+
+      function renewLoan(loanId) {
+        const loan = loans.find((l) => l.id === loanId);
+        const newDueDate = new Date(loan.dueDate);
+        newDueDate.setDate(newDueDate.getDate() + 14);
+
+        loan.dueDate = newDueDate.toISOString().slice(0, 10);
+        alert(
+          `Préstamo renovado. Nueva fecha de devolución: ${newDueDate.toLocaleDateString()}`
+        );
+
+        renderLoansTable();
+        updateSyncTime();
+      }
+
+      function sendReminder(loanId) {
+        const loan = loans.find((l) => l.id === loanId);
+        alert(
+          `Recordatorio enviado a ${loan.userName} sobre la devolución del libro "${loan.bookTitle}".`
+        );
+      }
+
+      // Users management
+      function renderUsersTable() {
+        const tbody = document.getElementById("usersTableBody");
+
+        tbody.innerHTML = users
+          .map(
+            (user) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">${
+                      user.id
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
+                      user.name
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      user.email
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            ${user.type}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      user.activeLoans
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${user.fines.toFixed(
+                      2
+                    )}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.status === "active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }">
+                            ${
+                              user.status === "active" ? "Activo" : "Suspendido"
+                            }
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editUser('${
+                          user.id
+                        }')" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
+                        <button onclick="payFines('${
+                          user.id
+                        }')" class="text-green-600 hover:text-green-900 mr-3">Pagar Multas</button>
+                        <button onclick="toggleUserStatus('${
+                          user.id
+                        }')" class="text-red-600 hover:text-red-900">
+                            ${
+                              user.status === "active" ? "Suspender" : "Activar"
+                            }
+                        </button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      function addUser() {
+        const name = prompt("Nombre completo del usuario:");
+        const email = prompt("Email del usuario:");
+        const type = prompt("Tipo de usuario (estudiante/profesor/externo):");
+
+        if (name && email && type) {
+          const newUser = {
+            id: "U" + String(users.length + 1).padStart(3, "0"),
+            name: name,
+            email: email,
+            type: type,
+            activeLoans: 0,
+            fines: 0,
+            status: "active",
+          };
+
+          users.push(newUser);
+          renderUsersTable();
+          updateStats();
+          updateSyncTime();
+          alert(`Usuario ${name} agregado exitosamente con ID: ${newUser.id}`);
+        }
+      }
+
+      function editUser(userId) {
+        const user = users.find((u) => u.id === userId);
+        const newName = prompt("Nuevo nombre:", user.name);
+        const newEmail = prompt("Nuevo email:", user.email);
+
+        if (newName && newEmail) {
+          user.name = newName;
+          user.email = newEmail;
+          renderUsersTable();
+          updateSyncTime();
+          alert("Usuario actualizado exitosamente.");
+        }
+      }
+
+      function payFines(userId) {
+        const user = users.find((u) => u.id === userId);
+        if (user.fines > 0) {
+          const amount = parseFloat(
+            prompt(
+              `Multas pendientes: $${user.fines.toFixed(2)}\nMonto a pagar:`,
+              user.fines.toFixed(2)
+            )
+          );
+          if (amount && amount > 0) {
+            user.fines = Math.max(0, user.fines - amount);
+            alert(
+              `Pago procesado: $${amount.toFixed(
+                2
+              )}\nSaldo restante: $${user.fines.toFixed(2)}`
+            );
+            renderUsersTable();
+            updateSyncTime();
+          }
+        } else {
+          alert("Este usuario no tiene multas pendientes.");
+        }
+      }
+
+      function toggleUserStatus(userId) {
+        const user = users.find((u) => u.id === userId);
+        user.status = user.status === "active" ? "suspended" : "active";
+        renderUsersTable();
+        updateStats();
+        updateSyncTime();
+        alert(
+          `Usuario ${
+            user.status === "active" ? "activado" : "suspendido"
+          } exitosamente.`
+        );
+      }
+
+      // Reports
+      function generateReport(type) {
+        switch (type) {
+          case "circulation":
+            alert(
+              "Reporte de Circulación\n\nPréstamos del mes: 1,247\nDevoluciones del mes: 1,198\nPromedio diario: 41.6 préstamos\nTasa de devolución: 96.1%"
+            );
+            break;
+          case "overdue":
+            const overdueCount = loans.filter(
+              (l) => l.status === "active" && new Date() > new Date(l.dueDate)
+            ).length;
+            alert(
+              `Reporte de Libros Vencidos\n\nTotal vencidos: ${overdueCount}\nMultas generadas: $${(
+                overdueCount * 15.75
+              ).toFixed(2)}\nUsuarios afectados: ${overdueCount}`
+            );
+            break;
+          case "popular":
+            alert(
+              "Libros Más Populares\n\n1. Sapiens - 47 préstamos\n2. 1984 - 42 préstamos\n3. El Código Da Vinci - 38 préstamos\n4. Steve Jobs - 35 préstamos\n5. Breve Historia del Tiempo - 31 préstamos"
+            );
+            break;
+          case "inventory":
+            alert(
+              `Reporte de Inventario\n\nTotal de libros: ${
+                books.length
+              }\nDisponibles: ${
+                books.filter((b) => b.status === "available").length
+              }\nPrestados: ${
+                books.filter((b) => b.status === "loaned").length
+              }\nEn mantenimiento: ${
+                books.filter((b) => b.status === "maintenance").length
+              }`
+            );
+            break;
+        }
+      }
+
+      // Export functions
+      function exportCatalog() {
+        alert(
+          "Exportando catálogo completo...\n\nEl archivo CSV incluirá:\n- Información completa de todos los libros\n- Estado actual de cada ejemplar\n- Ubicación física\n- Historial de préstamos\n\nArchivo generado: catalogo_completo.csv"
+        );
+      }
+
+      function bulkImport() {
+        alert(
+          "Importación Masiva\n\nFormatos soportados:\n- CSV con campos: ISBN, Título, Autor, Categoría, Año, Editorial\n- Excel (.xlsx)\n- MARC21 (.mrc)\n\nEn un sistema real, aquí se abriría un diálogo para seleccionar el archivo."
+        );
+      }
+
+      // Database operations
+      function syncDatabase() {
+        document.querySelector('button[onclick="syncDatabase()"]').textContent =
+          "Sincronizando...";
+
+        setTimeout(() => {
+          updateSyncTime();
+          document.querySelector(
+            'button[onclick="syncDatabase()"]'
+          ).textContent = "Sincronizar DB";
+          alert(
+            "Base de datos sincronizada correctamente.\n\nTablas actualizadas:\n- books: 12,847 registros\n- loans: 3,456 registros\n- users: 2,156 registros\n- transactions: 45,892 registros"
+          );
+        }, 2000);
+      }
+
+      function updateSyncTime() {
+        const now = new Date();
+        document.getElementById("lastSync").textContent =
+          now.toLocaleString("es-ES");
+      }
+
+      // Initialize on load
+      document.addEventListener("DOMContentLoaded", init);
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97d49e90f42ab20e',t:'MTc1NzU2NzAxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
